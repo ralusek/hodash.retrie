@@ -3,7 +3,7 @@ export type Retrie<T> = {
   catch: Promise<T>['catch'];
   finally: Promise<T>['finally'];
   promise: Promise<T>;
-  cancel: () => void;
+  cancel: (error?: any) => void;
   state: RetrieState<T>;
 };
 

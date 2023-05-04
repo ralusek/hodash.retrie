@@ -9,8 +9,73 @@ A retrie is a retrier like you'd find from bluebird-retry or async-retry, but re
 # Installation
 `npm install --save retrie`
 
-# Examples
+# Usage
+First, import retrie:
 
+```ts
+import { retrie } from 'hodash.retrie';
+```
+
+You can then use retrie to create a retried operation:
+
+```ts
+const operation = () => fetch('https://api.example.com/data');
+const retried = retrie(operation, { maxRetries: 3, minTimeout: 1000 });
+```
+
+This creates a new operation that will be retried up to 3 times, with a minimum delay of 1000 milliseconds between attempts.
+
+The retried object shares an interface with a promise, so you can treat it like you would a normal promise:
+
+```ts
+const result = await retried;
+
+// or
+
+retried
+.then(() => {})
+.catch(err => {});
+```
+
+### Canceling
+You can cancel a retry process from happening from within your function or from outside.
+
+```ts
+// From outside
+const retried = retrie(operation, { maxRetries: 3, minTimeout: 1000 });
+retried.cancel();
+
+// From inside
+
+retrie(({ cancel, retries }) => {
+  // Maybe something happened where in this particular case, after n retries, we cancel early
+  if (retries > 3 && thingHappened) cancel();
+});
+
+// Specific cancel error
+retrie(({ cancel, retries }) => {
+  // We can pass cancel an error that will be thrown in place of the last error the retrie encountered.
+  if (retries > 3 && thingHappened) cancel(new Error('Special error));
+});
+```
+
+## Scenario
+
+### Race condition
+
+Consider a scenario where you are reaching out to multiple data sources in a race scenario. If any of the sources resolve successfully, you might want to cancel the rest:
+
+```ts
+const source1 = retrie(fetchDataFromSource1, { maxRetries: 3, minTimeout: 1000 });
+const source2 = retrie(fetchDataFromSource2, { maxRetries: 3, minTimeout: 1000 });
+
+const result = await Promise.race([source1.promise, source2.promise])
+.catch(err => {}); // Swallow any errors from race failures
+
+// Cancel any active retries (the "winner" will be unaffected)
+source1.cancel();
+source2.cancel();
+```
 
 # Contributing
 We welcome contributions! Please see our contributing guidelines for more information.

@@ -1,27 +1,18 @@
+// Types
 import { Retrie, RetrieConfig, RetrieState } from './types';
+
+// Utils
+import sleep from './utils/sleep';
+
+// Helpers
+import { validateConfig } from './helpers/validateConfig';
+
 
 export function retrie<T>(
   fn: (retrie: Retrie<T>) => T | Promise<T>,
   config: RetrieConfig = {},
 ): Retrie<T> {
-  ([
-    'maxRetries',
-    'minTimeout',
-    'maxTimeout',
-  ] as unknown as (keyof RetrieConfig)[]).forEach((prop) => {
-    const value = config[prop] as number;
-    if (value !== undefined && value < 0 && !Number.isInteger(value)) {
-      throw new Error(`Retrie: ${prop} must be a positive integer.`);
-    }
-  });
-
-  if (config.backoff !== undefined && typeof config.backoff !== 'number' && config.backoff < 0) {
-    throw new Error(`Retrie: backoff must be a positive number.`);
-  }
-
-  if (config.backoffType !== undefined && config.backoffType !== 'linear' && config.backoffType !== 'exponential') {
-    throw new Error(`Retrie: backoffType must be either 'linear' or 'exponential'.`);
-  }
+  validateConfig(config);
 
   const settings = {
     maxRetries: config.maxRetries ?? 3,
@@ -41,34 +32,42 @@ export function retrie<T>(
     active: true,
   };
 
+  const errors: Record<string, any> = {
+    last: undefined,
+  };
+
+  const promiseInterface = {} as {
+    resolve: (value: T | PromiseLike<T>) => void;
+    reject: (reason?: any) => void;
+  };
+
   const promise = new Promise<T>(async (resolve, reject) => {
-    function rejectAndSetError(error: any, finished: boolean = false) {
-      state.result = { error, type: 'error' };
-      state.finished = finished;
-      state.active = false;
-      reject(error);
-    }
+    promiseInterface.resolve = resolve;
+    promiseInterface.reject = reject;
 
-    function sleep(ms: number) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
-    let lastError: any;
 
     // This is a do-while loop, so it will always run at least once.
     do {
+      if (!state.active) return;
       try {
         // We need this up here because the retrie could have been cancelled during the sleep.
-        if (state.cancelled) return rejectAndSetError(lastError);
+        
         const result = await fn(retrie);
+        if (!state.active) return;
+
         state.result = { value: result, type: 'success' };
         state.finished = true;
         state.active = false;
         return resolve(result);
       } catch (error) {
-        lastError = error;
-        if (state.cancelled) return rejectAndSetError(error);
-        if (state.retries >= settings.maxRetries) return rejectAndSetError(error, true);
+        if (!state.active) return;
+        errors.last = error;
+        if (state.retries >= settings.maxRetries) {
+          state.result = { error, type: 'error' };
+          state.finished = true;
+          state.active = false;
+          return reject(error);
+        }
 
         const timeout = state.timeout;
         state.timeout = Math.min(
@@ -86,8 +85,18 @@ export function retrie<T>(
     while (state.retries++ < settings.maxRetries);
   });
 
-  function cancel() {
+  function cancel(error?: any) {
+    if (!state.active) return;
     state.cancelled = true;
+    state.finished = false;
+    state.active = false;
+
+    state.result = {
+      error: error || errors.last || new Error('Cancelled.'),
+      type: 'error',
+    };
+
+    promiseInterface.reject(state.result.error);
   }
 
   const retrie: Retrie<T> = {

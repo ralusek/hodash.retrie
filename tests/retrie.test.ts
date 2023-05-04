@@ -62,4 +62,12 @@ describe('retrie', () => {
     // Since cancellation happened after the first retry but before the second, we expect 2 calls
     expect(fn).toHaveBeenCalledTimes(2);
   });
+
+  it('should throw a specific error if cancel is called with a value', async () => {
+    const fn = jest.fn().mockRejectedValue(new Error('failure'));
+    const retried = retrie(fn, { maxRetries: 3, minTimeout: 1000 });
+    setTimeout(() => retried.cancel(new Error('cancel')), 1500); // Cancel after 1.5 seconds
+    await expect(retried.promise).rejects.toThrow('cancel');
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
 });
