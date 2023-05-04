@@ -61,7 +61,7 @@ retrie(({ cancel, retries }) => {
 
 ## Scenario
 
-### Race condition
+### Race Scenario
 
 Consider a scenario where you are reaching out to multiple data sources in a race scenario. If any of the sources resolve successfully, you might want to cancel the rest:
 
