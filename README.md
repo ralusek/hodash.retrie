@@ -25,15 +25,15 @@ const retried = retrie(operation, { maxRetries: 3, minTimeout: 1000 });
 
 This creates a new operation that will be retried up to 3 times, with a minimum delay of 1000 milliseconds between attempts.
 
-The retried object shares an interface with a promise, so you can treat it like you would a normal promise:
+The retried object has a promise property containing the promise for the resolution of its function.
 
 ```ts
-const result = await retried;
+const result = await retried.promise;
 
 // or
 
-retried
-.then(() => {})
+retried.promise
+.then((result) => {})
 .catch(err => {});
 ```
 

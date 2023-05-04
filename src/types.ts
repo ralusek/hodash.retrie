@@ -1,7 +1,4 @@
 export type Retrie<T> = {
-  then: Promise<T>['then'];
-  catch: Promise<T>['catch'];
-  finally: Promise<T>['finally'];
   promise: Promise<T>;
   cancel: (error?: any) => void;
   state: RetrieState<T>;

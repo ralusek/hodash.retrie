@@ -41,6 +41,8 @@ export function retrie<T>(
     reject: (reason?: any) => void;
   };
 
+  let currentTimeout: NodeJS.Timeout | null = null;
+
   const promise = new Promise<T>(async (resolve, reject) => {
     promiseInterface.resolve = resolve;
     promiseInterface.reject = reject;
@@ -80,7 +82,8 @@ export function retrie<T>(
             : timeout * settings.backoff,
         );
 
-        await sleep(timeout);
+        await sleep(timeout, (timeoutId) => currentTimeout = timeoutId);
+        currentTimeout = null;
       }
     }
     // This chck is not necessary, aside from the increment, but is here
@@ -89,6 +92,7 @@ export function retrie<T>(
   });
 
   function cancel(error?: any) {
+    if (currentTimeout) clearTimeout(currentTimeout);
     if (!state.active) return;
     state.cancelled = true;
     state.finished = false;
@@ -103,9 +107,6 @@ export function retrie<T>(
   }
 
   const retrie: Retrie<T> = {
-    then: promise.then.bind(promise),
-    catch: promise.catch.bind(promise),
-    finally: promise.finally.bind(promise),
     promise,
     cancel,
     get state() {

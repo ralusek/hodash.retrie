@@ -1,12 +1,15 @@
 import { retrie } from '../src';
 
 describe('retrie', () => {
-  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+  const delay = (ms: number, fn?: () => void) => new Promise(resolve => setTimeout(async () => {
+    if (fn) await fn();
+    resolve(null);
+  }, ms));
 
   it('should resolve immediately if the function is successful', async () => {
     const fn = jest.fn(() => Promise.resolve('success'));
     const retried = retrie(fn, { maxRetries: 3, minTimeout: 100 });
-    const result = await retried;
+    const result = await retried.promise;
     expect(result).toBe('success');
     expect(retried.state.result).toEqual({ value: 'success', type: 'success' });
     expect(retried.state.finished).toBe(true);
@@ -33,7 +36,7 @@ describe('retrie', () => {
     await delay(1000); // 3500
     expect(retried.state.retries).toBe(3);
 
-    await expect(retried).rejects.toThrow('failure');
+    await expect(retried.promise).rejects.toThrow('failure');
   });
 
   it('should retry if the function fails', async () => {
@@ -42,7 +45,7 @@ describe('retrie', () => {
       .mockRejectedValueOnce(new Error('failure 2'))
       .mockResolvedValue('success');
     const retried = retrie(fn, { maxRetries: 3, minTimeout: 100 });
-    const result = await retried;
+    const result = await retried.promise;
     expect(result).toBe('success');
     expect(retried.state.result).toEqual({ value: 'success', type: 'success' });
     expect(retried.state.finished).toBe(true);
@@ -54,7 +57,7 @@ describe('retrie', () => {
   it('should fail if max retries is reached', async () => {
     const fn = jest.fn().mockRejectedValue(new Error('failure'));
     const retried = retrie(fn, { maxRetries: 3, minTimeout: 100 });
-    await expect(retried).rejects.toThrow('failure');
+    await expect(retried.promise).rejects.toThrow('failure');
     expect(retried.state.result).toEqual({ error: new Error('failure'), type: 'error' });
     expect(retried.state.finished).toBe(true);
     expect(retried.state.active).toBe(false);
@@ -88,7 +91,10 @@ describe('retrie', () => {
     const fn = jest.fn().mockRejectedValue(new Error('failure'));
     const retried = retrie(fn, { maxRetries: 3, minTimeout: 1000 });
     setTimeout(() => retried.cancel(new Error('cancel')), 1500); // Cancel after 1.5 seconds
+
     await expect(retried.promise).rejects.toThrow('cancel');
     expect(fn).toHaveBeenCalledTimes(2);
+
+    await delay(10);
   });
 });

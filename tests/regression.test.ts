@@ -16,7 +16,7 @@ describe('regressions', () => {
 
     expect(result.state.retries).toBe(0);
 
-    await result
+    await result.promise
     .catch(err => {
       expect(err.message).toBe('failure');
     });
