@@ -45,6 +45,9 @@ export function retrie<T>(
     promiseInterface.resolve = resolve;
     promiseInterface.reject = reject;
 
+    // Await next processor tick so that retrie is defined.
+    await sleep(0);
+
 
     // This is a do-while loop, so it will always run at least once.
     do {
