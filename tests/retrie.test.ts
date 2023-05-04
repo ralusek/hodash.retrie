@@ -15,6 +15,27 @@ describe('retrie', () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
+  it('should have the correct number of retries during execution', async () => {
+    const fn = () => delay(1000).then(() => Promise.reject(new Error('failure')));
+
+    const retried = retrie(fn, { maxRetries: 3, minTimeout: 0, backoff: 0 });
+    expect(retried.state.retries).toBe(0);
+    expect(retried.state.active).toBe(true);
+    await delay(500); // 500
+    expect(retried.state.retries).toBe(0);
+    expect(retried.state.active).toBe(true);
+    await delay(1000); // 1500
+    expect(retried.state.retries).toBe(1);
+    expect(retried.state.active).toBe(true);
+    await delay(1000); // 2500
+    expect(retried.state.retries).toBe(2);
+    expect(retried.state.active).toBe(true);
+    await delay(1000); // 3500
+    expect(retried.state.retries).toBe(3);
+
+    await expect(retried).rejects.toThrow('failure');
+  });
+
   it('should retry if the function fails', async () => {
     const fn = jest.fn()
       .mockRejectedValueOnce(new Error('failure 1'))
