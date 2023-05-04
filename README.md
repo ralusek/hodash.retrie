@@ -1,8 +1,6 @@
-<## retrie: It's ex-retrie cool!
-
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ralusek/retrie/blob/master/LICENSE)
-[![npm version](https://img.shields.io/npm/v/retrie.svg?style=flat)](https://www.npmjs.com/package/retrie)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/ralusek/retrie/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ralusek/hodash.retrie/blob/master/LICENSE)
+[![npm version](https://img.shields.io/npm/v/hodash.retrie.svg?style=flat)](https://www.npmjs.com/package/hodash.retrie)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/ralusek/hodash.retrie/blob/master/LICENSE)
 
 ### What is a retrie?
 
