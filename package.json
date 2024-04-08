@@ -1,21 +1,36 @@
 {
   "name": "hodash.retrie",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A promise retrier with the ability to track and cancel externally and internally.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "node build.js",
     "test": "jest"
   },
-  "keywords": [],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "retry",
+    "hodash",
+    "retrie",
+    "promise",
+    "async",
+    "await",
+    "retrier",
+    "retryer",
+    "retriable"
+  ],
   "author": "Tomas Savigliano <ralusek@gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.1",
     "@types/node": "^18.16.3",
+    "esbuild": "^0.18.20",
+    "esbuild-plugin-d.ts": "^1.2.3",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.4.3"
   }
 }

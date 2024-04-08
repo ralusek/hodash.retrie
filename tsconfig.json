@@ -1,14 +1,23 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "lib": ["es2015"],
     "module": "commonjs",
     "declaration": true,
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      // Allows absolute import pats beginning with @
+      // "@/*": ["*"],
+      // "@src/*": ["src/*"],
+    },
   },
+  
   "include": ["src"],
   "exclude": ["node_modules", "**/*.test.ts"]
 }

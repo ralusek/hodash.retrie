@@ -7,6 +7,7 @@ import sleep from './utils/sleep';
 // Helpers
 import { validateConfig } from './helpers/validateConfig';
 
+export { Retrie, RetrieConfig, RetrieState };
 
 export function retrie<T>(
   fn: (retrie: Retrie<T>) => T | Promise<T>,
